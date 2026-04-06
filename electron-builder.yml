@@ -1,0 +1,8 @@
+# Placeholder for Phase 8 packaging config.
+appId: com.scripturestudy.app
+productName: Scripture Study
+directories:
+  output: release
+files:
+  - out/**/*
+  - package.json

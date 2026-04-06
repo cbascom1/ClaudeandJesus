@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Theme palettes via CSS variables. Swapped by [data-theme="..."] on <html>. */
+:root,
+[data-theme="light"] {
+  --color-bg: #f6f1e6;          /* warm parchment */
+  --color-surface: #fdf9ef;     /* slightly lighter surface */
+  --color-border: #d9cfba;
+  --color-text: #2a2823;        /* dark ink */
+  --color-muted: #78706a;
+  --color-accent: #8b4513;      /* saddle-brown accent (user-configurable later) */
+  --color-highlight-bg: #f5e1a8; /* soft gold for search match highlights */
+  --color-highlight-text: #2a2823;
+}
+
+[data-theme="dark"] {
+  --color-bg: #1c1a17;          /* deep charcoal, warm */
+  --color-surface: #252320;
+  --color-border: #3a3530;
+  --color-text: #ece4d3;
+  --color-muted: #9b938a;
+  --color-accent: #d4a574;      /* warm tan accent */
+  --color-highlight-bg: #6b5a2e; /* muted gold on dark */
+  --color-highlight-text: #f5e8c8;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'DM Sans', 'Source Sans 3', system-ui, sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scripture text uses serif */
+.scripture-text {
+  font-family: 'Lora', 'Merriweather', Georgia, serif;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+}
+
+/* Search match highlights — override browser's default yellow <mark> style
+   so we get theme-aware colors. Tailwind's opacity modifiers (e.g. /25) don't
+   work here because our palette is hex-valued CSS variables. */
+mark.search-highlight {
+  background-color: var(--color-highlight-bg);
+  color: var(--color-highlight-text);
+  border-radius: 0.125rem;
+  padding: 0 0.125rem;
+}

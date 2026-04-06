@@ -1,0 +1,49 @@
+import { contextBridge, ipcRenderer } from 'electron';
+import { IPC_CHANNELS } from '../src/types/ipc';
+import type { ImportProgressEvent, WindowApi } from '../src/types/ipc';
+
+const api: WindowApi = {
+  db: {
+    getBooks: () => ipcRenderer.invoke(IPC_CHANNELS.dbGetBooks),
+    getChaptersByBook: (bookId) =>
+      ipcRenderer.invoke(IPC_CHANNELS.dbGetChaptersByBook, bookId),
+    getVersesByChapter: (chapterId) =>
+      ipcRenderer.invoke(IPC_CHANNELS.dbGetVersesByChapter, chapterId),
+    getVerseById: (verseId) =>
+      ipcRenderer.invoke(IPC_CHANNELS.dbGetVerseById, verseId),
+    searchVerses: (query, filters) =>
+      ipcRenderer.invoke(IPC_CHANNELS.dbSearchVerses, query, filters)
+  },
+  import: {
+    pickFile: () => ipcRenderer.invoke(IPC_CHANNELS.importPickFile),
+    parseFile: (filePath) =>
+      ipcRenderer.invoke(IPC_CHANNELS.importParseFile, filePath),
+    detectConflicts: (parseResult) =>
+      ipcRenderer.invoke(IPC_CHANNELS.importDetectConflicts, parseResult),
+    confirmImport: (req) => ipcRenderer.invoke(IPC_CHANNELS.importConfirm, req),
+    onProgress: (cb) => {
+      const handler = (_evt: unknown, event: ImportProgressEvent) => cb(event);
+      ipcRenderer.on(IPC_CHANNELS.importProgress, handler);
+      // Return an unsubscribe function
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.importProgress, handler);
+    }
+  },
+  topics: {
+    getAll: () => ipcRenderer.invoke(IPC_CHANNELS.topicsGetAll),
+    create: (name, color) => ipcRenderer.invoke(IPC_CHANNELS.topicsCreate, name, color),
+    update: (id, name, color) => ipcRenderer.invoke(IPC_CHANNELS.topicsUpdate, id, name, color),
+    remove: (id) => ipcRenderer.invoke(IPC_CHANNELS.topicsRemove, id),
+    merge: (sourceId, targetId) => ipcRenderer.invoke(IPC_CHANNELS.topicsMerge, sourceId, targetId),
+    getForVerse: (verseId) => ipcRenderer.invoke(IPC_CHANNELS.topicsGetForVerse, verseId),
+    addToVerse: (verseId, topicId) => ipcRenderer.invoke(IPC_CHANNELS.topicsAddToVerse, verseId, topicId),
+    removeFromVerse: (verseId, topicId) => ipcRenderer.invoke(IPC_CHANNELS.topicsRemoveFromVerse, verseId, topicId),
+    getStats: () => ipcRenderer.invoke(IPC_CHANNELS.topicsGetStats),
+    getVersesForTopic: (topicId) => ipcRenderer.invoke(IPC_CHANNELS.topicsGetVersesForTopic, topicId),
+    setVerseHighlight: (verseId, color) => ipcRenderer.invoke(IPC_CHANNELS.topicsSetVerseHighlight, verseId, color)
+  },
+  app: {
+    getVersion: () => ipcRenderer.invoke(IPC_CHANNELS.appGetVersion)
+  }
+};
+
+contextBridge.exposeInMainWorld('api', api);
