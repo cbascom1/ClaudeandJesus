@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 export type Theme = 'light' | 'dark';
 
-export type MainView = 'library' | 'topics';
+export type MainView = 'library' | 'topics' | 'lists';
 
 interface UiState {
   theme: Theme;

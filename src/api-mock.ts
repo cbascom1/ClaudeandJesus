@@ -13,13 +13,15 @@ import type {
   TopicWithMeta,
   TopicStat,
   TopicVerseRow,
+  StudyListVerseRow,
+  StudyListStat,
   SidecarStatus,
   EmbeddingStats,
   SemanticSearchResult,
   AiTopicSuggestion,
   EmbeddingProgress
 } from './types/ipc';
-import type { Book, Chapter, Verse, VerseWithRef, Topic } from './types/domain';
+import type { Book, Chapter, Verse, VerseWithRef, Topic, Note, StudyList } from './types/domain';
 
 const BOOKS: Book[] = [
   { id: 1, title: 'Genesis', work: 'bible', import_date: '2026-04-05', source_file: null },
@@ -70,6 +72,32 @@ const MOCK_TOPICS: Topic[] = [
   { id: 5, name: 'Obedience', color: '#6366F1' }
 ];
 let nextTopicId = 6;
+
+// Mock notes data
+const MOCK_NOTES: Note[] = [
+  {
+    id: 1, verse_id: 1001,
+    content: 'The creation account begins with God\'s sovereign act. Compare with John 1:1.',
+    created: '2026-04-01T10:00:00Z', updated: '2026-04-01T10:00:00Z'
+  },
+  {
+    id: 2, verse_id: 1003,
+    content: 'Light as a symbol of Christ throughout scripture.',
+    created: '2026-04-02T14:30:00Z', updated: '2026-04-02T14:30:00Z'
+  }
+];
+let nextNoteId = 3;
+
+// Mock study lists
+const MOCK_STUDY_LISTS: StudyList[] = [
+  { id: 1, name: 'Christology Verses', description: 'Key verses about Jesus Christ', created: '2026-04-01T08:00:00Z' },
+  { id: 2, name: 'Faith & Works', description: null, created: '2026-04-03T12:00:00Z' }
+];
+let nextListId = 3;
+const studyListVersesMap = new Map<number, number[]>([
+  [1, [1001, 2001]],  // Christology → Gen 1:1, Matt 1:1
+  [2, [4001]]         // Faith & Works → Alma 32:21
+]);
 const verseTopicMap = new Map<number, number[]>([
   [1001, [1, 3]],     // Gen 1:1 → Creation, Jesus Christ
   [1003, [1, 4]],     // Gen 1:3 → Creation, Light
@@ -204,6 +232,89 @@ export const MOCK_API: WindowApi = {
       return rows;
     },
     setVerseHighlight: async () => {}
+  },
+  notes: {
+    getForVerse: async (verseId) =>
+      MOCK_NOTES.filter((n) => n.verse_id === verseId),
+    create: async (verseId, content) => {
+      const note: Note = {
+        id: nextNoteId++,
+        verse_id: verseId,
+        content,
+        created: new Date().toISOString(),
+        updated: new Date().toISOString()
+      };
+      MOCK_NOTES.unshift(note);
+      return note;
+    },
+    update: async (noteId, content) => {
+      const note = MOCK_NOTES.find((n) => n.id === noteId);
+      if (note) {
+        note.content = content;
+        note.updated = new Date().toISOString();
+      }
+    },
+    remove: async (noteId) => {
+      const idx = MOCK_NOTES.findIndex((n) => n.id === noteId);
+      if (idx >= 0) MOCK_NOTES.splice(idx, 1);
+    }
+  },
+  studyLists: {
+    getAll: async () => MOCK_STUDY_LISTS,
+    create: async (name, description) => {
+      const list: StudyList = {
+        id: nextListId++,
+        name,
+        description,
+        created: new Date().toISOString()
+      };
+      MOCK_STUDY_LISTS.unshift(list);
+      return list;
+    },
+    update: async (id, name, description) => {
+      const list = MOCK_STUDY_LISTS.find((l) => l.id === id);
+      if (list) { list.name = name; list.description = description; }
+    },
+    remove: async (id) => {
+      const idx = MOCK_STUDY_LISTS.findIndex((l) => l.id === id);
+      if (idx >= 0) MOCK_STUDY_LISTS.splice(idx, 1);
+      studyListVersesMap.delete(id);
+    },
+    getVerses: async (listId) => {
+      const verseIds = studyListVersesMap.get(listId) ?? [];
+      const rows: StudyListVerseRow[] = [];
+      verseIds.forEach((verseId, idx) => {
+        for (const verses of Object.values(VERSES)) {
+          const v = verses.find((x) => x.id === verseId);
+          if (!v) continue;
+          const ch = CHAPTER_BY_ID.get(v.chapter_id);
+          const bk = ch ? BOOK_BY_ID.get(ch.book_id) : undefined;
+          if (!ch || !bk) continue;
+          rows.push({
+            verse_id: v.id, chapter_id: ch.id, book_id: bk.id,
+            verse_number: v.number, chapter_number: ch.number,
+            book_title: bk.title, book_work: bk.work, text: v.text,
+            sort_order: idx
+          });
+        }
+      });
+      return rows;
+    },
+    addVerse: async (listId, verseId) => {
+      const existing = studyListVersesMap.get(listId) ?? [];
+      if (!existing.includes(verseId)) studyListVersesMap.set(listId, [...existing, verseId]);
+    },
+    removeVerse: async (listId, verseId) => {
+      const existing = studyListVersesMap.get(listId) ?? [];
+      studyListVersesMap.set(listId, existing.filter((id) => id !== verseId));
+    },
+    reorderVerse: async () => { /* no-op in mock */ },
+    getStats: async () => {
+      return MOCK_STUDY_LISTS.map((l) => ({
+        ...l,
+        verse_count: (studyListVersesMap.get(l.id) ?? []).length
+      } as StudyListStat));
+    }
   },
   import: {
     pickFile: async () => null,

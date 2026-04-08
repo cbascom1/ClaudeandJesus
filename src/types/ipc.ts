@@ -8,6 +8,8 @@ import type {
   Verse,
   VerseWithRef,
   Topic,
+  Note,
+  StudyList,
   Work
 } from './domain';
 
@@ -202,6 +204,49 @@ export interface AiApi {
   onEmbeddingProgress: (cb: (event: EmbeddingProgress) => void) => () => void;
 }
 
+// ---------- Notes types ----------
+
+export interface NotesApi {
+  getForVerse: (verseId: number) => Promise<Note[]>;
+  create: (verseId: number, content: string) => Promise<Note>;
+  update: (noteId: number, content: string) => Promise<void>;
+  remove: (noteId: number) => Promise<void>;
+}
+
+// ---------- Study Lists types ----------
+
+export interface StudyListVerseRow {
+  verse_id: number;
+  chapter_id: number;
+  book_id: number;
+  verse_number: number;
+  chapter_number: number;
+  book_title: string;
+  book_work: Work;
+  text: string;
+  sort_order: number;
+}
+
+export interface StudyListStat {
+  id: number;
+  name: string;
+  description: string | null;
+  created: string;
+  verse_count: number;
+}
+
+export interface StudyListsApi {
+  getAll: () => Promise<StudyList[]>;
+  create: (name: string, description: string | null) => Promise<StudyList>;
+  update: (id: number, name: string, description: string | null) => Promise<void>;
+  remove: (id: number) => Promise<void>;
+  getVerses: (listId: number) => Promise<StudyListVerseRow[]>;
+  addVerse: (listId: number, verseId: number) => Promise<void>;
+  removeVerse: (listId: number, verseId: number) => Promise<void>;
+  reorderVerse: (listId: number, verseId: number, newOrder: number) => Promise<void>;
+  getStats: () => Promise<StudyListStat[]>;
+}
+
 export interface AppApi {
   getVersion: () => Promise<string>;
 }
@@ -210,6 +255,8 @@ export interface WindowApi {
   db: DbApi;
   import: ImportApi;
   topics: TopicsApi;
+  notes: NotesApi;
+  studyLists: StudyListsApi;
   ai: AiApi;
   app: AppApi;
 }
@@ -246,5 +293,18 @@ export const IPC_CHANNELS = {
   aiEmbeddingStats: 'ai:embeddingStats',
   aiSemanticSearch: 'ai:semanticSearch',
   aiClassifyVerse: 'ai:classifyVerse',
+  notesGetForVerse: 'notes:getForVerse',
+  notesCreate: 'notes:create',
+  notesUpdate: 'notes:update',
+  notesDelete: 'notes:delete',
+  studyListsGetAll: 'studyLists:getAll',
+  studyListsCreate: 'studyLists:create',
+  studyListsUpdate: 'studyLists:update',
+  studyListsDelete: 'studyLists:delete',
+  studyListsGetVerses: 'studyLists:getVerses',
+  studyListsAddVerse: 'studyLists:addVerse',
+  studyListsRemoveVerse: 'studyLists:removeVerse',
+  studyListsReorderVerse: 'studyLists:reorderVerse',
+  studyListsGetStats: 'studyLists:getStats',
   appGetVersion: 'app:getVersion'
 } as const;

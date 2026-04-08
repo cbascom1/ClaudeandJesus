@@ -4,6 +4,8 @@ import { openDatabase, closeDatabase } from './db/database';
 import { registerDbHandlers } from './ipc/dbHandlers';
 import { registerImportHandlers } from './ipc/importHandlers';
 import { registerTopicHandlers } from './ipc/topicHandlers';
+import { registerNoteHandlers } from './ipc/noteHandlers';
+import { registerStudyListHandlers } from './ipc/studyListHandlers';
 import { registerAiHandlers } from './ipc/aiHandlers';
 import { stopSidecar } from './python/sidecarManager';
 import { IPC_CHANNELS } from '../src/types/ipc';
@@ -80,6 +82,8 @@ app.whenReady().then(() => {
   registerDbHandlers();
   registerImportHandlers();
   registerTopicHandlers();
+  registerNoteHandlers();
+  registerStudyListHandlers();
   registerAiHandlers();
   ipcMain.handle(IPC_CHANNELS.appGetVersion, () => app.getVersion());
 

@@ -41,6 +41,23 @@ const api: WindowApi = {
     getVersesForTopic: (topicId) => ipcRenderer.invoke(IPC_CHANNELS.topicsGetVersesForTopic, topicId),
     setVerseHighlight: (verseId, color) => ipcRenderer.invoke(IPC_CHANNELS.topicsSetVerseHighlight, verseId, color)
   },
+  notes: {
+    getForVerse: (verseId) => ipcRenderer.invoke(IPC_CHANNELS.notesGetForVerse, verseId),
+    create: (verseId, content) => ipcRenderer.invoke(IPC_CHANNELS.notesCreate, verseId, content),
+    update: (noteId, content) => ipcRenderer.invoke(IPC_CHANNELS.notesUpdate, noteId, content),
+    remove: (noteId) => ipcRenderer.invoke(IPC_CHANNELS.notesDelete, noteId)
+  },
+  studyLists: {
+    getAll: () => ipcRenderer.invoke(IPC_CHANNELS.studyListsGetAll),
+    create: (name, description) => ipcRenderer.invoke(IPC_CHANNELS.studyListsCreate, name, description),
+    update: (id, name, description) => ipcRenderer.invoke(IPC_CHANNELS.studyListsUpdate, id, name, description),
+    remove: (id) => ipcRenderer.invoke(IPC_CHANNELS.studyListsDelete, id),
+    getVerses: (listId) => ipcRenderer.invoke(IPC_CHANNELS.studyListsGetVerses, listId),
+    addVerse: (listId, verseId) => ipcRenderer.invoke(IPC_CHANNELS.studyListsAddVerse, listId, verseId),
+    removeVerse: (listId, verseId) => ipcRenderer.invoke(IPC_CHANNELS.studyListsRemoveVerse, listId, verseId),
+    reorderVerse: (listId, verseId, newOrder) => ipcRenderer.invoke(IPC_CHANNELS.studyListsReorderVerse, listId, verseId, newOrder),
+    getStats: () => ipcRenderer.invoke(IPC_CHANNELS.studyListsGetStats)
+  },
   ai: {
     sidecarStart: () => ipcRenderer.invoke(IPC_CHANNELS.aiSidecarStart),
     sidecarStop: () => ipcRenderer.invoke(IPC_CHANNELS.aiSidecarStop),

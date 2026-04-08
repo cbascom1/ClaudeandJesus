@@ -7,6 +7,7 @@ import { ImportDialog } from './components/ImportDialog';
 import { SearchBar } from './components/SearchBar/SearchBar';
 import { SearchResults } from './components/SearchResults/SearchResults';
 import { TopicExplorer } from './components/TopicExplorer/TopicExplorer';
+import { StudyListExplorer } from './components/StudyLists/StudyListExplorer';
 import { useLibraryStore } from './stores/libraryStore';
 import { useUiStore } from './stores/uiStore';
 import { useSearchStore } from './stores/searchStore';
@@ -42,31 +43,28 @@ export function App() {
 
         {/* Sidebar nav: Library / Topics */}
         <nav className="flex border-b border-parchment-border shrink-0">
-          <button
-            onClick={() => setMainView('library')}
-            className={`flex-1 text-xs py-2 text-center transition-colors ${
-              mainView === 'library'
-                ? 'font-semibold border-b-2 border-parchment-accent text-parchment-text'
-                : 'text-parchment-muted hover:text-parchment-text hover:bg-parchment-bg'
-            }`}
-          >
-            Library
-          </button>
-          <button
-            onClick={() => setMainView('topics')}
-            className={`flex-1 text-xs py-2 text-center transition-colors ${
-              mainView === 'topics'
-                ? 'font-semibold border-b-2 border-parchment-accent text-parchment-text'
-                : 'text-parchment-muted hover:text-parchment-text hover:bg-parchment-bg'
-            }`}
-          >
-            Topics
-          </button>
+          {(['library', 'topics', 'lists'] as const).map((view) => (
+            <button
+              key={view}
+              onClick={() => setMainView(view)}
+              className={`flex-1 text-xs py-2 text-center transition-colors ${
+                mainView === view
+                  ? 'font-semibold border-b-2 border-parchment-accent text-parchment-text'
+                  : 'text-parchment-muted hover:text-parchment-text hover:bg-parchment-bg'
+              }`}
+            >
+              {view === 'library' ? 'Library' : view === 'topics' ? 'Topics' : 'Lists'}
+            </button>
+          ))}
         </nav>
 
-        {mainView === 'library' ? <LibraryTree /> : (
+        {mainView === 'library' ? (
+          <LibraryTree />
+        ) : (
           <div className="flex-1 overflow-y-auto text-xs text-parchment-muted px-4 py-3">
-            <p className="italic">Select Topics tab in main view to explore</p>
+            <p className="italic">
+              Select {mainView === 'topics' ? 'Topics' : 'Lists'} tab in main view to explore
+            </p>
           </div>
         )}
 
@@ -87,6 +85,8 @@ export function App() {
           <SearchResults />
         ) : mainView === 'topics' ? (
           <TopicExplorer />
+        ) : mainView === 'lists' ? (
+          <StudyListExplorer />
         ) : (
           <>
             <TabBar />

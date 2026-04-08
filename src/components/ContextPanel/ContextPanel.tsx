@@ -3,6 +3,8 @@ import { useLibraryStore } from '../../stores/libraryStore';
 import { useUiStore } from '../../stores/uiStore';
 import { TopicChips } from './TopicChips';
 import { AiSuggestions } from './AiSuggestions';
+import { NoteEditor } from './NoteEditor';
+import { StudyListPicker } from './StudyListPicker';
 import { WORK_LABELS } from '@shared/domain';
 import type { VerseWithRef } from '@shared/domain';
 
@@ -99,10 +101,12 @@ export function ContextPanel() {
               <AiSuggestions verseId={verse.id} verseText={verse.text} />
             </ContextSection>
 
+            <ContextSection title="Study Lists">
+              <StudyListPicker verseId={verse.id} />
+            </ContextSection>
+
             <ContextSection title="Notes">
-              <p className="text-xs text-parchment-muted italic">
-                Personal notes come in Phase 6.
-              </p>
+              <NoteEditor verseId={verse.id} />
             </ContextSection>
 
             <ContextSection title="Cross-references">
