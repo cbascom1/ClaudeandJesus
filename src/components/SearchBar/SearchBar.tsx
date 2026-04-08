@@ -1,17 +1,19 @@
 import { useEffect, useRef } from 'react';
 import { useSearchStore } from '../../stores/searchStore';
+import type { SearchMode } from '../../stores/searchStore';
 
 export function SearchBar() {
   const query = useSearchStore((s) => s.query);
   const loading = useSearchStore((s) => s.loading);
   const committedQuery = useSearchStore((s) => s.committedQuery);
+  const mode = useSearchStore((s) => s.mode);
   const setQuery = useSearchStore((s) => s.setQuery);
+  const setMode = useSearchStore((s) => s.setMode);
   const runSearch = useSearchStore((s) => s.runSearch);
   const clearSearch = useSearchStore((s) => s.clearSearch);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Ctrl/Cmd+K focuses the search input from anywhere in the app.
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -19,7 +21,6 @@ export function SearchBar() {
         inputRef.current?.focus();
         inputRef.current?.select();
       }
-      // Escape clears search when the input is focused
       if (e.key === 'Escape' && document.activeElement === inputRef.current) {
         clearSearch();
         inputRef.current?.blur();
@@ -39,21 +40,42 @@ export function SearchBar() {
     inputRef.current?.focus();
   };
 
+  const toggleMode = () => {
+    setMode(mode === 'exact' ? 'semantic' : 'exact');
+  };
+
   return (
     <form
       onSubmit={handleSubmit}
       className="flex items-center gap-2 px-4 py-2 border-b border-parchment-border bg-parchment-surface shrink-0"
     >
+      {/* Mode toggle */}
+      <button
+        type="button"
+        onClick={toggleMode}
+        className={`text-xs px-2 py-1.5 rounded border transition-colors shrink-0 ${
+          mode === 'semantic'
+            ? 'bg-parchment-accent text-white border-parchment-accent'
+            : 'border-parchment-border hover:bg-parchment-bg'
+        }`}
+        title={mode === 'exact' ? 'Switch to semantic search (AI)' : 'Switch to exact search (FTS)'}
+      >
+        {mode === 'exact' ? 'Exact' : 'Semantic'}
+      </button>
+
       <div className="relative flex-1">
         <input
           ref={inputRef}
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search scripture…  (⌘K)"
+          placeholder={
+            mode === 'exact'
+              ? 'Search scripture…  (⌘K)'
+              : 'Semantic search…  (⌘K)'
+          }
           className="w-full px-3 py-1.5 pr-16 text-sm rounded border border-parchment-border bg-parchment-bg focus:outline-none focus:ring-2 focus:ring-parchment-accent/30 focus:border-parchment-accent"
-          /* Disable the browser-native clear "×" since we render our own. */
-          style={{ WebkitAppearance: 'none' }}
+          style={{ WebkitAppearance: 'none' } as React.CSSProperties}
         />
         {query && (
           <button

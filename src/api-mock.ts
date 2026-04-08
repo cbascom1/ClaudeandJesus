@@ -6,7 +6,19 @@
  * `window.api` is undefined, so we install this stub. Data is small and static —
  * just enough to exercise every UI state.
  */
-import type { WindowApi, SearchResult, SearchFilters, TopicWithMeta, TopicStat, TopicVerseRow } from './types/ipc';
+import type {
+  WindowApi,
+  SearchResult,
+  SearchFilters,
+  TopicWithMeta,
+  TopicStat,
+  TopicVerseRow,
+  SidecarStatus,
+  EmbeddingStats,
+  SemanticSearchResult,
+  AiTopicSuggestion,
+  EmbeddingProgress
+} from './types/ipc';
 import type { Book, Chapter, Verse, VerseWithRef, Topic } from './types/domain';
 
 const BOOKS: Book[] = [
@@ -205,6 +217,73 @@ export const MOCK_API: WindowApi = {
     detectConflicts: async () => [],
     confirmImport: async () => ({ inserted: [], skipped: [] }),
     onProgress: () => () => undefined
+  },
+  ai: {
+    sidecarStart: async (): Promise<SidecarStatus> => ({
+      running: true,
+      port: 8765,
+      model: 'all-MiniLM-L6-v2 (mock)',
+      pid: 12345
+    }),
+    sidecarStop: async () => {
+      /* no-op */
+    },
+    sidecarStatus: async (): Promise<SidecarStatus> => ({
+      running: true,
+      port: 8765,
+      model: 'all-MiniLM-L6-v2 (mock)',
+      pid: 12345
+    }),
+    generateEmbeddings: async (): Promise<EmbeddingStats> => {
+      // Simulate a brief delay
+      await new Promise((r) => setTimeout(r, 500));
+      return { embedded: 10, total: 10 };
+    },
+    embeddingStats: async (): Promise<EmbeddingStats> => ({ embedded: 7, total: 10 }),
+    semanticSearch: async (query: string, _filters: SearchFilters): Promise<SemanticSearchResult[]> => {
+      // Return a few mock results with similarity scores
+      const q = query.toLowerCase();
+      const results: SemanticSearchResult[] = [];
+      for (const [chapterIdStr, verses] of Object.entries(VERSES)) {
+        const chapterId = Number(chapterIdStr);
+        const chapter = CHAPTER_BY_ID.get(chapterId);
+        if (!chapter) continue;
+        const book = BOOK_BY_ID.get(chapter.book_id);
+        if (!book) continue;
+        for (const v of verses) {
+          // Simple text-overlap scoring for mock
+          const words = q.split(/\s+/);
+          const matchCount = words.filter((w) => v.text.toLowerCase().includes(w)).length;
+          if (matchCount === 0) continue;
+          results.push({
+            verse_id: v.id,
+            chapter_id: chapterId,
+            book_id: book.id,
+            verse_number: v.number,
+            chapter_number: chapter.number,
+            book_title: book.title,
+            book_work: book.work,
+            text: v.text,
+            score: matchCount / Math.max(words.length, 1) * 0.6 + 0.3
+          });
+        }
+      }
+      return results.sort((a, b) => b.score - a.score).slice(0, 20);
+    },
+    classifyVerse: async (_text: string): Promise<AiTopicSuggestion[]> => {
+      // Return mock suggestions from the topic catalog
+      await new Promise((r) => setTimeout(r, 300));
+      const shuffled = [...MOCK_TOPICS].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, 3).map((t, i) => ({
+        topicId: t.id,
+        topicName: t.name,
+        score: 0.85 - i * 0.12
+      }));
+    },
+    onEmbeddingProgress: (_cb: (event: EmbeddingProgress) => void) => {
+      // No-op in mock — return unsubscribe
+      return () => undefined;
+    }
   },
   app: {
     getVersion: async () => '0.1.0-preview'

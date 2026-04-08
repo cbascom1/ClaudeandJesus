@@ -4,6 +4,8 @@ import { openDatabase, closeDatabase } from './db/database';
 import { registerDbHandlers } from './ipc/dbHandlers';
 import { registerImportHandlers } from './ipc/importHandlers';
 import { registerTopicHandlers } from './ipc/topicHandlers';
+import { registerAiHandlers } from './ipc/aiHandlers';
+import { stopSidecar } from './python/sidecarManager';
 import { IPC_CHANNELS } from '../src/types/ipc';
 
 // Dev-only: remote debugging for automated DOM inspection.
@@ -78,6 +80,7 @@ app.whenReady().then(() => {
   registerDbHandlers();
   registerImportHandlers();
   registerTopicHandlers();
+  registerAiHandlers();
   ipcMain.handle(IPC_CHANNELS.appGetVersion, () => app.getVersion());
 
   createWindow();
@@ -92,5 +95,6 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
+  stopSidecar();
   closeDatabase();
 });

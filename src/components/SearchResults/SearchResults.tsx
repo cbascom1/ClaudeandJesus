@@ -2,13 +2,15 @@ import { useSearchStore } from '../../stores/searchStore';
 import { useLibraryStore } from '../../stores/libraryStore';
 import { WORK_LABELS } from '@shared/domain';
 import type { Work } from '@shared/domain';
-import type { SearchResult } from '@shared/ipc';
+import type { SearchResult, SemanticSearchResult } from '@shared/ipc';
 
 const WORK_OPTIONS: Work[] = ['bible', 'book_of_mormon', 'dc', 'pgp'];
 
 export function SearchResults() {
   const results = useSearchStore((s) => s.results);
+  const semanticResults = useSearchStore((s) => s.semanticResults);
   const committedQuery = useSearchStore((s) => s.committedQuery);
+  const mode = useSearchStore((s) => s.mode);
   const loading = useSearchStore((s) => s.loading);
   const error = useSearchStore((s) => s.error);
   const workFilter = useSearchStore((s) => s.workFilter);
@@ -19,12 +21,14 @@ export function SearchResults() {
   const selectVerse = useLibraryStore((s) => s.selectVerse);
   const clearSearch = useSearchStore((s) => s.clearSearch);
 
-  const handleResultClick = async (r: SearchResult) => {
-    await openChapterInTab(r.book_id, r.chapter_id);
-    selectVerse(r.verse_id);
-    // Navigate away from search results to the chapter view with verse highlighted.
+  const navigateToVerse = async (bookId: number, chapterId: number, verseId: number) => {
+    await openChapterInTab(bookId, chapterId);
+    selectVerse(verseId);
     clearSearch();
   };
+
+  const allResults = mode === 'semantic' ? semanticResults : results;
+  const totalCount = allResults.length;
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -65,38 +69,39 @@ export function SearchResults() {
           <p className="text-red-700 dark:text-red-400 text-sm">Error: {error}</p>
         )}
 
-        {!loading && !error && results.length === 0 && committedQuery && (
+        {!loading && !error && totalCount === 0 && committedQuery && (
           <p className="text-parchment-muted italic">
             No verses matched "{committedQuery}".
+            {mode === 'semantic' && (
+              <span className="block mt-1 text-xs">
+                Make sure embeddings have been generated (Topics → AI Settings).
+              </span>
+            )}
           </p>
         )}
 
-        {!loading && results.length > 0 && (
+        {!loading && totalCount > 0 && (
           <>
             <p className="text-xs text-parchment-muted mb-3">
-              {results.length} result{results.length === 1 ? '' : 's'}
+              {totalCount} result{totalCount === 1 ? '' : 's'}
+              {mode === 'semantic' && ' (by relevance)'}
             </p>
             <ul className="space-y-2 max-w-3xl">
-              {results.map((r) => (
-                <li key={r.verse_id}>
-                  <button
-                    onClick={() => handleResultClick(r)}
-                    className="w-full text-left p-3 rounded border border-parchment-border hover:bg-parchment-surface hover:border-parchment-accent/40 transition-colors"
-                  >
-                    <div className="flex items-baseline justify-between gap-3 mb-1">
-                      <span className="font-serif text-sm font-semibold">
-                        {r.book_title} {r.chapter_number}:{r.verse_number}
-                      </span>
-                      <span className="text-xs text-parchment-muted shrink-0">
-                        {WORK_LABELS[r.book_work]}
-                      </span>
-                    </div>
-                    <p className="scripture-text text-sm leading-snug">
-                      <HighlightedText highlighted={r.highlighted} />
-                    </p>
-                  </button>
-                </li>
-              ))}
+              {mode === 'exact'
+                ? (results as SearchResult[]).map((r) => (
+                    <ExactResultCard
+                      key={r.verse_id}
+                      result={r}
+                      onClick={() => navigateToVerse(r.book_id, r.chapter_id, r.verse_id)}
+                    />
+                  ))
+                : (semanticResults as SemanticSearchResult[]).map((r) => (
+                    <SemanticResultCard
+                      key={r.verse_id}
+                      result={r}
+                      onClick={() => navigateToVerse(r.book_id, r.chapter_id, r.verse_id)}
+                    />
+                  ))}
             </ul>
           </>
         )}
@@ -105,11 +110,72 @@ export function SearchResults() {
   );
 }
 
-/**
- * Render FTS5 highlight markers («…») as <mark> elements without using
- * dangerouslySetInnerHTML — we split on the delimiters and alternate between
- * plain text and highlighted spans.
- */
+// ---------- Exact result card ----------
+
+function ExactResultCard({
+  result,
+  onClick
+}: {
+  result: SearchResult;
+  onClick: () => void;
+}) {
+  return (
+    <li>
+      <button
+        onClick={onClick}
+        className="w-full text-left p-3 rounded border border-parchment-border hover:bg-parchment-surface hover:border-parchment-accent/40 transition-colors"
+      >
+        <div className="flex items-baseline justify-between gap-3 mb-1">
+          <span className="font-serif text-sm font-semibold">
+            {result.book_title} {result.chapter_number}:{result.verse_number}
+          </span>
+          <span className="text-xs text-parchment-muted shrink-0">
+            {WORK_LABELS[result.book_work]}
+          </span>
+        </div>
+        <p className="scripture-text text-sm leading-snug">
+          <HighlightedText highlighted={result.highlighted} />
+        </p>
+      </button>
+    </li>
+  );
+}
+
+// ---------- Semantic result card ----------
+
+function SemanticResultCard({
+  result,
+  onClick
+}: {
+  result: SemanticSearchResult;
+  onClick: () => void;
+}) {
+  const pct = Math.round(result.score * 100);
+  return (
+    <li>
+      <button
+        onClick={onClick}
+        className="w-full text-left p-3 rounded border border-parchment-border hover:bg-parchment-surface hover:border-parchment-accent/40 transition-colors"
+      >
+        <div className="flex items-baseline justify-between gap-3 mb-1">
+          <span className="font-serif text-sm font-semibold">
+            {result.book_title} {result.chapter_number}:{result.verse_number}
+          </span>
+          <span className="flex items-center gap-2 shrink-0">
+            <span className="text-xs font-medium text-parchment-accent">{pct}%</span>
+            <span className="text-xs text-parchment-muted">
+              {WORK_LABELS[result.book_work]}
+            </span>
+          </span>
+        </div>
+        <p className="scripture-text text-sm leading-snug">{result.text}</p>
+      </button>
+    </li>
+  );
+}
+
+// ---------- FTS5 highlight parser ----------
+
 function HighlightedText({ highlighted }: { highlighted: string }) {
   const parts: Array<{ text: string; match: boolean }> = [];
   let i = 0;
@@ -124,7 +190,6 @@ function HighlightedText({ highlighted }: { highlighted: string }) {
     }
     const closeIdx = highlighted.indexOf('»', openIdx + 1);
     if (closeIdx === -1) {
-      // Unbalanced; treat remainder as plain text
       parts.push({ text: highlighted.slice(openIdx), match: false });
       break;
     }

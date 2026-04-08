@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "renderer-only",
+      "runtimeExecutable": "/bin/zsh",
+      "runtimeArgs": ["-c", "export PATH=/opt/homebrew/bin:$PATH && exec /opt/homebrew/bin/node /opt/homebrew/bin/npx vite --config vite.renderer.config.mjs"],
+      "port": 5174
+    }
+  ]
+}

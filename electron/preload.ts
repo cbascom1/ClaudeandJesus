@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from '../src/types/ipc';
-import type { ImportProgressEvent, WindowApi } from '../src/types/ipc';
+import type { ImportProgressEvent, EmbeddingProgress, WindowApi } from '../src/types/ipc';
 
 const api: WindowApi = {
   db: {
@@ -40,6 +40,22 @@ const api: WindowApi = {
     getStats: () => ipcRenderer.invoke(IPC_CHANNELS.topicsGetStats),
     getVersesForTopic: (topicId) => ipcRenderer.invoke(IPC_CHANNELS.topicsGetVersesForTopic, topicId),
     setVerseHighlight: (verseId, color) => ipcRenderer.invoke(IPC_CHANNELS.topicsSetVerseHighlight, verseId, color)
+  },
+  ai: {
+    sidecarStart: () => ipcRenderer.invoke(IPC_CHANNELS.aiSidecarStart),
+    sidecarStop: () => ipcRenderer.invoke(IPC_CHANNELS.aiSidecarStop),
+    sidecarStatus: () => ipcRenderer.invoke(IPC_CHANNELS.aiSidecarStatus),
+    generateEmbeddings: () => ipcRenderer.invoke(IPC_CHANNELS.aiGenerateEmbeddings),
+    embeddingStats: () => ipcRenderer.invoke(IPC_CHANNELS.aiEmbeddingStats),
+    semanticSearch: (query, filters) =>
+      ipcRenderer.invoke(IPC_CHANNELS.aiSemanticSearch, query, filters),
+    classifyVerse: (verseText) =>
+      ipcRenderer.invoke(IPC_CHANNELS.aiClassifyVerse, verseText),
+    onEmbeddingProgress: (cb) => {
+      const handler = (_evt: unknown, event: EmbeddingProgress) => cb(event);
+      ipcRenderer.on(IPC_CHANNELS.aiEmbeddingProgress, handler);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.aiEmbeddingProgress, handler);
+    }
   },
   app: {
     getVersion: () => ipcRenderer.invoke(IPC_CHANNELS.appGetVersion)

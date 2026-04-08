@@ -153,6 +153,55 @@ export interface TopicsApi {
   setVerseHighlight: (verseId: number, color: string | null) => Promise<void>;
 }
 
+// ---------- AI / Embeddings types ----------
+
+export interface SidecarStatus {
+  running: boolean;
+  port: number | null;
+  model: string | null;
+  pid: number | null;
+}
+
+export interface EmbeddingProgress {
+  current: number;
+  total: number;
+  message: string;
+}
+
+export interface EmbeddingStats {
+  embedded: number;
+  total: number;
+}
+
+export interface SemanticSearchResult {
+  verse_id: number;
+  chapter_id: number;
+  book_id: number;
+  verse_number: number;
+  chapter_number: number;
+  book_title: string;
+  book_work: Work;
+  text: string;
+  score: number;
+}
+
+export interface AiTopicSuggestion {
+  topicId: number;
+  topicName: string;
+  score: number;
+}
+
+export interface AiApi {
+  sidecarStart: () => Promise<SidecarStatus>;
+  sidecarStop: () => Promise<void>;
+  sidecarStatus: () => Promise<SidecarStatus>;
+  generateEmbeddings: () => Promise<EmbeddingStats>;
+  embeddingStats: () => Promise<EmbeddingStats>;
+  semanticSearch: (query: string, filters: SearchFilters) => Promise<SemanticSearchResult[]>;
+  classifyVerse: (verseText: string) => Promise<AiTopicSuggestion[]>;
+  onEmbeddingProgress: (cb: (event: EmbeddingProgress) => void) => () => void;
+}
+
 export interface AppApi {
   getVersion: () => Promise<string>;
 }
@@ -161,6 +210,7 @@ export interface WindowApi {
   db: DbApi;
   import: ImportApi;
   topics: TopicsApi;
+  ai: AiApi;
   app: AppApi;
 }
 
@@ -188,5 +238,13 @@ export const IPC_CHANNELS = {
   topicsGetStats: 'topics:getStats',
   topicsGetVersesForTopic: 'topics:getVersesForTopic',
   topicsSetVerseHighlight: 'topics:setVerseHighlight',
+  aiSidecarStart: 'ai:sidecarStart',
+  aiSidecarStop: 'ai:sidecarStop',
+  aiSidecarStatus: 'ai:sidecarStatus',
+  aiGenerateEmbeddings: 'ai:generateEmbeddings',
+  aiEmbeddingProgress: 'ai:embeddingProgress',
+  aiEmbeddingStats: 'ai:embeddingStats',
+  aiSemanticSearch: 'ai:semanticSearch',
+  aiClassifyVerse: 'ai:classifyVerse',
   appGetVersion: 'app:getVersion'
 } as const;

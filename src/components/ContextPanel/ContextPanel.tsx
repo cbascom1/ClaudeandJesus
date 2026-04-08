@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLibraryStore } from '../../stores/libraryStore';
 import { useUiStore } from '../../stores/uiStore';
 import { TopicChips } from './TopicChips';
+import { AiSuggestions } from './AiSuggestions';
 import { WORK_LABELS } from '@shared/domain';
 import type { VerseWithRef } from '@shared/domain';
 
@@ -95,6 +96,7 @@ export function ContextPanel() {
 
             <ContextSection title="Topics">
               <TopicChips verseId={verse.id} />
+              <AiSuggestions verseId={verse.id} verseText={verse.text} />
             </ContextSection>
 
             <ContextSection title="Notes">
