@@ -6,6 +6,8 @@ import { registerImportHandlers } from './ipc/importHandlers';
 import { registerTopicHandlers } from './ipc/topicHandlers';
 import { registerNoteHandlers } from './ipc/noteHandlers';
 import { registerStudyListHandlers } from './ipc/studyListHandlers';
+import { registerCrossRefHandlers } from './ipc/crossRefHandlers';
+import { registerExportHandlers } from './ipc/exportHandlers';
 import { registerAiHandlers } from './ipc/aiHandlers';
 import { stopSidecar } from './python/sidecarManager';
 import { IPC_CHANNELS } from '../src/types/ipc';
@@ -84,6 +86,8 @@ app.whenReady().then(() => {
   registerTopicHandlers();
   registerNoteHandlers();
   registerStudyListHandlers();
+  registerCrossRefHandlers();
+  registerExportHandlers();
   registerAiHandlers();
   ipcMain.handle(IPC_CHANNELS.appGetVersion, () => app.getVersion());
 

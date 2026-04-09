@@ -15,6 +15,8 @@ import type {
   TopicVerseRow,
   StudyListVerseRow,
   StudyListStat,
+  CrossRefRow,
+  ExportRequest,
   SidecarStatus,
   EmbeddingStats,
   SemanticSearchResult,
@@ -98,6 +100,13 @@ const studyListVersesMap = new Map<number, number[]>([
   [1, [1001, 2001]],  // Christology → Gen 1:1, Matt 1:1
   [2, [4001]]         // Faith & Works → Alma 32:21
 ]);
+// Mock cross-references
+const MOCK_CROSS_REFS: Array<{ id: number; source_verse: number; target_verse: number; note: string | null }> = [
+  { id: 1, source_verse: 1001, target_verse: 2001, note: 'Both opening verses' },
+  { id: 2, source_verse: 1003, target_verse: 4001, note: 'Light and faith' }
+];
+let nextCrossRefId = 3;
+
 const verseTopicMap = new Map<number, number[]>([
   [1001, [1, 3]],     // Gen 1:1 → Creation, Jesus Christ
   [1003, [1, 4]],     // Gen 1:3 → Creation, Light
@@ -314,6 +323,58 @@ export const MOCK_API: WindowApi = {
         ...l,
         verse_count: (studyListVersesMap.get(l.id) ?? []).length
       } as StudyListStat));
+    }
+  },
+  crossRefs: {
+    getForVerse: async (verseId): Promise<CrossRefRow[]> => {
+      const rows: CrossRefRow[] = [];
+      for (const cr of MOCK_CROSS_REFS) {
+        let linkedVerseId: number | null = null;
+        let direction: 'outgoing' | 'incoming' = 'outgoing';
+        if (cr.source_verse === verseId) {
+          linkedVerseId = cr.target_verse;
+          direction = 'outgoing';
+        } else if (cr.target_verse === verseId) {
+          linkedVerseId = cr.source_verse;
+          direction = 'incoming';
+        }
+        if (linkedVerseId == null) continue;
+        for (const verses of Object.values(VERSES)) {
+          const v = verses.find((x) => x.id === linkedVerseId);
+          if (!v) continue;
+          const ch = CHAPTER_BY_ID.get(v.chapter_id);
+          const bk = ch ? BOOK_BY_ID.get(ch.book_id) : undefined;
+          if (!ch || !bk) continue;
+          rows.push({
+            id: cr.id, linked_verse_id: v.id, chapter_id: ch.id, book_id: bk.id,
+            verse_number: v.number, chapter_number: ch.number,
+            book_title: bk.title, book_work: bk.work, text: v.text,
+            note: cr.note, direction
+          });
+        }
+      }
+      return rows;
+    },
+    add: async (sourceVerseId, targetVerseId, note) => {
+      const id = nextCrossRefId++;
+      MOCK_CROSS_REFS.push({ id, source_verse: sourceVerseId, target_verse: targetVerseId, note });
+      return id;
+    },
+    updateNote: async (id, note) => {
+      const cr = MOCK_CROSS_REFS.find((c) => c.id === id);
+      if (cr) cr.note = note;
+    },
+    remove: async (id) => {
+      const idx = MOCK_CROSS_REFS.findIndex((c) => c.id === id);
+      if (idx >= 0) MOCK_CROSS_REFS.splice(idx, 1);
+    }
+  },
+  export: {
+    toFile: async (req: ExportRequest) => {
+      // In browser preview, just log and return null (no file system)
+      console.info('[api-mock] Export requested:', req);
+      alert(`Export "${req.type}" would save to file (not available in browser preview)`);
+      return null;
     }
   },
   import: {

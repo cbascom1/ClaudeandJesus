@@ -5,6 +5,7 @@ import { TopicChips } from './TopicChips';
 import { AiSuggestions } from './AiSuggestions';
 import { NoteEditor } from './NoteEditor';
 import { StudyListPicker } from './StudyListPicker';
+import { CrossRefList } from './CrossRefList';
 import { WORK_LABELS } from '@shared/domain';
 import type { VerseWithRef } from '@shared/domain';
 
@@ -110,9 +111,7 @@ export function ContextPanel() {
             </ContextSection>
 
             <ContextSection title="Cross-references">
-              <p className="text-xs text-parchment-muted italic">
-                Cross-references come in Phase 7.
-              </p>
+              <CrossRefList verseId={verse.id} />
             </ContextSection>
           </div>
         )}

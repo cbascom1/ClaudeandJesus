@@ -113,6 +113,12 @@ export function TopicDetail({ topicId, onBack }: { topicId: number; onBack: () =
             >
               Edit
             </button>
+            <button
+              onClick={() => void window.api.export.toFile({ type: 'topic', id: topicId })}
+              className="text-xs px-2 py-1 rounded border border-parchment-border hover:bg-parchment-bg text-parchment-muted"
+            >
+              Export
+            </button>
           </>
         )}
       </div>

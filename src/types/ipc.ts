@@ -247,6 +247,40 @@ export interface StudyListsApi {
   getStats: () => Promise<StudyListStat[]>;
 }
 
+// ---------- Cross-References types ----------
+
+export interface CrossRefRow {
+  id: number;
+  linked_verse_id: number;
+  chapter_id: number;
+  book_id: number;
+  verse_number: number;
+  chapter_number: number;
+  book_title: string;
+  book_work: Work;
+  text: string;
+  note: string | null;
+  direction: 'outgoing' | 'incoming';
+}
+
+export interface CrossRefsApi {
+  getForVerse: (verseId: number) => Promise<CrossRefRow[]>;
+  add: (sourceVerseId: number, targetVerseId: number, note: string | null) => Promise<number>;
+  updateNote: (id: number, note: string | null) => Promise<void>;
+  remove: (id: number) => Promise<void>;
+}
+
+// ---------- Export types ----------
+
+export interface ExportRequest {
+  type: 'studyList' | 'topic' | 'notes';
+  id?: number;
+}
+
+export interface ExportApi {
+  toFile: (req: ExportRequest) => Promise<string | null>;
+}
+
 export interface AppApi {
   getVersion: () => Promise<string>;
 }
@@ -257,6 +291,8 @@ export interface WindowApi {
   topics: TopicsApi;
   notes: NotesApi;
   studyLists: StudyListsApi;
+  crossRefs: CrossRefsApi;
+  export: ExportApi;
   ai: AiApi;
   app: AppApi;
 }
@@ -306,5 +342,10 @@ export const IPC_CHANNELS = {
   studyListsRemoveVerse: 'studyLists:removeVerse',
   studyListsReorderVerse: 'studyLists:reorderVerse',
   studyListsGetStats: 'studyLists:getStats',
+  crossRefsGetForVerse: 'crossRefs:getForVerse',
+  crossRefsAdd: 'crossRefs:add',
+  crossRefsUpdateNote: 'crossRefs:updateNote',
+  crossRefsRemove: 'crossRefs:remove',
+  exportToFile: 'export:toFile',
   appGetVersion: 'app:getVersion'
 } as const;

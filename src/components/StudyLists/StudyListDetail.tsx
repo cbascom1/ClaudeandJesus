@@ -126,6 +126,12 @@ export function StudyListDetail({ listId, onBack }: StudyListDetailProps) {
             >
               Edit
             </button>
+            <button
+              onClick={() => void window.api.export.toFile({ type: 'studyList', id: listId })}
+              className="text-xs px-2 py-1 rounded border border-parchment-border hover:bg-parchment-bg transition-colors"
+            >
+              Export
+            </button>
           </div>
           {list.description && (
             <p className="text-sm text-parchment-muted mt-1">{list.description}</p>

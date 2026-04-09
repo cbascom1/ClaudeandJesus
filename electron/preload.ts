@@ -58,6 +58,15 @@ const api: WindowApi = {
     reorderVerse: (listId, verseId, newOrder) => ipcRenderer.invoke(IPC_CHANNELS.studyListsReorderVerse, listId, verseId, newOrder),
     getStats: () => ipcRenderer.invoke(IPC_CHANNELS.studyListsGetStats)
   },
+  crossRefs: {
+    getForVerse: (verseId) => ipcRenderer.invoke(IPC_CHANNELS.crossRefsGetForVerse, verseId),
+    add: (sourceVerseId, targetVerseId, note) => ipcRenderer.invoke(IPC_CHANNELS.crossRefsAdd, sourceVerseId, targetVerseId, note),
+    updateNote: (id, note) => ipcRenderer.invoke(IPC_CHANNELS.crossRefsUpdateNote, id, note),
+    remove: (id) => ipcRenderer.invoke(IPC_CHANNELS.crossRefsRemove, id)
+  },
+  export: {
+    toFile: (req) => ipcRenderer.invoke(IPC_CHANNELS.exportToFile, req)
+  },
   ai: {
     sidecarStart: () => ipcRenderer.invoke(IPC_CHANNELS.aiSidecarStart),
     sidecarStop: () => ipcRenderer.invoke(IPC_CHANNELS.aiSidecarStop),
