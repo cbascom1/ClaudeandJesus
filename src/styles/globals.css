@@ -56,3 +56,31 @@ mark.search-highlight {
   border-radius: 0.125rem;
   padding: 0 0.125rem;
 }
+
+/* Smooth scrolling for verse navigation */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Print-friendly styles — hide chrome, keep scripture text */
+@media print {
+  aside, nav, header, .shrink-0, [role="tablist"] {
+    display: none !important;
+  }
+  main {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+  }
+  .scripture-text {
+    font-size: 11pt;
+    line-height: 1.8;
+  }
+  @page {
+    margin: 1in;
+  }
+}

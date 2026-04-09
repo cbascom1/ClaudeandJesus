@@ -94,7 +94,7 @@ export function TopicGrid({ onSelectTopic }: { onSelectTopic: (id: number) => vo
         <p className="text-parchment-muted text-sm italic">No topics yet.</p>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-w-4xl">
+      <div className="grid gap-3 max-w-4xl" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
         {topicStats.map((stat) => (
           <div
             key={stat.id}
